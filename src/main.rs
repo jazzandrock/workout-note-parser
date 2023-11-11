@@ -1,7 +1,34 @@
 use pest::Parser;
 use sportparser::*;
+use structopt::StructOpt;
+use std::{path::PathBuf, fs::File, io::BufReader};
+
+use std::io::{self, Read};
+
+
+#[derive(StructOpt, Debug)]
+struct Cli {
+    /// Input file, or '-' to read from stdin
+    #[structopt(parse(from_os_str))]
+    input: Option<PathBuf>,
+}
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
+    color_eyre::install()?;
+
+    let args = Cli::from_args();
+
+    let mut buffer = String::new();
+    if let Some(input) = args.input.as_ref() {
+        if input.to_str() == Some("-") {
+            io::stdin().read_to_string(&mut buffer)?;
+        } else {
+            let file = File::open(input)?;
+            let mut reader = BufReader::new(file);
+            reader.read_to_string(&mut buffer)?;
+        }
+    }
+
     let input = r#"
         name of the first exercise
         20 x 10 this is a comment. there you write 
