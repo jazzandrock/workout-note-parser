@@ -30,7 +30,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             .into_inner()
             .filter(|r| r.as_rule() == Rule::exercise)
             .map(get_exercise_from_pairs)
-            .collect::<Vec<Vec<Exercise>>>();
+            .collect::<Result<Vec<_>, _>>()?;
         println!("Vec: {:#?}", vec);
     }
 

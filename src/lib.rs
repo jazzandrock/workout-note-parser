@@ -3,6 +3,9 @@ use pest::iterators::Pair;
 #[macro_use]
 extern crate pest_derive;
 
+mod error;
+pub use error::Error as ExerciseError;
+
 #[derive(Parser)]
 #[grammar = "workout.pest"]
 pub struct WorkoutParser;
@@ -20,7 +23,7 @@ pub struct Exercise {
     comment: Option<String>,
 }
 
-pub fn get_set(name: String, pair: Pair<'_, Rule>) -> Exercise {
+pub fn parse_set(name: String, pair: Pair<'_, Rule>) -> Result<Exercise, ExerciseError> {
     let mut pairella = Some(pair);
 
     let mut sets = Vec::new();
@@ -52,18 +55,18 @@ pub fn get_set(name: String, pair: Pair<'_, Rule>) -> Exercise {
 
                 pairella = pairs.next();
             }
-            _ => panic!("Unexpected rule: {:?}", pair.as_rule()),
+            _ => return Err(ExerciseError::UnexpectedRule(pair.as_rule())),
         }
     }
 
-    Exercise {
+    Ok(Exercise {
         name,
         sets,
         comment,
-    }
+    })
 }
 
-pub fn get_exercise_from_pairs(pair: Pair<'_, Rule>) -> Vec<Exercise> {
+pub fn get_exercise_from_pairs(pair: Pair<'_, Rule>) -> Result<Vec<Exercise>, ExerciseError> {
     if pair.as_rule() != Rule::exercise {
         panic!("not Found exercise");
     }
@@ -82,10 +85,10 @@ pub fn get_exercise_from_pairs(pair: Pair<'_, Rule>) -> Vec<Exercise> {
             panic!("not Found sets");
         }
 
-        res.push(get_set(name.clone(), rule));
+        res.push(parse_set(name.clone(), rule)?);
     }
 
-    res
+    Ok(res)
 }
 
 
