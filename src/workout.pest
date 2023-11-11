@@ -2,7 +2,7 @@ workout = { (exercise | NEWLINE)+ }
 exercise = { name ~ (NEWLINE ~ set)+ }
 name = { (!NEWLINE ~ ANY)* }
 set = { weight ~ "x" ~ reps ~ ("+" ~ set)? ~ comment? }
-comment = { (!NEWLINE ~ ANY)* }
+comment = { (!NEWLINE ~ ANY)+ }
 weight = {
     ASCII_DIGIT+ ~ "." ~ ASCII_DIGIT+
   | ASCII_DIGIT+

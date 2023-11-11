@@ -1,9 +1,93 @@
+use pest::iterators::Pair;
+
 #[macro_use]
 extern crate pest_derive;
 
 #[derive(Parser)]
-#[grammar = "workout.pest"] // path to your .pest file
-struct WorkoutParser;
+#[grammar = "workout.pest"]
+pub struct WorkoutParser;
+
+#[derive(Debug)]
+pub struct Set {
+    weight: f32,
+    n_reps: i32,
+}
+
+#[derive(Debug)]
+pub struct Exercise {
+    name: String,
+    sets: Vec<Set>,
+    comment: Option<String>,
+}
+
+pub fn get_set(name: String, pair: Pair<'_, Rule>) -> Exercise {
+    let mut pairella = Some(pair);
+
+    let mut sets = Vec::new();
+    let mut comment = None;
+    while let Some(pair) = pairella {
+        match pair.as_rule() {
+            Rule::comment => {
+                comment = Some(pair.as_str().trim().to_string());
+                pairella = pair.into_inner().next();
+            }
+            Rule::set => {
+                let mut pairs = pair.into_inner();
+                let weight = pairs
+                    .next()
+                    .unwrap()
+                    .as_str()
+                    .trim()
+                    .parse::<f32>()
+                    .unwrap();
+                let n_reps = pairs
+                    .next()
+                    .unwrap()
+                    .as_str()
+                    .trim()
+                    .parse::<i32>()
+                    .unwrap();
+
+                sets.push(Set { weight, n_reps });
+
+                pairella = pairs.next();
+            }
+            _ => panic!("Unexpected rule: {:?}", pair.as_rule()),
+        }
+    }
+
+    Exercise {
+        name,
+        sets,
+        comment,
+    }
+}
+
+pub fn get_exercise_from_pairs(pair: Pair<'_, Rule>) -> Vec<Exercise> {
+    if pair.as_rule() != Rule::exercise {
+        panic!("not Found exercise");
+    }
+
+    let mut rules = pair.into_inner();
+    let rule = rules.next().unwrap();
+    if rule.as_rule() != Rule::name {
+        panic!("not Found name");
+    }
+    let name = rule.as_str().to_string();
+    println!("Name: {}", name);
+
+    let mut res = Vec::new();
+    while let Some(rule) = rules.next() {
+        if rule.as_rule() != Rule::set {
+            panic!("not Found sets");
+        }
+
+        res.push(get_set(name.clone(), rule));
+    }
+
+    res
+}
+
 
 #[cfg(test)]
 mod tests {
