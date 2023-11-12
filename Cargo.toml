@@ -1,6 +1,6 @@
 [package]
 name = "workout-note-parser"
-version = "0.1.0"
+version = "0.1.1"
 edition = "2021"
 description = "Parse workout notes into JSON format."
 repository = "https://github.com/jazzandrock/workout-note-parser"

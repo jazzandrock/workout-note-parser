@@ -39,6 +39,8 @@ struct Exercise {
 
 Use the command this way:
 ```bash
+cargo install workout-note-parser
+
 workout-note-parser -i - < input.txt > output.txt
 workout-note-parser -i input.txt > output.txt
 workout-note-parser -i input.txt -o output.txt
