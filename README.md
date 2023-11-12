@@ -34,3 +34,18 @@ struct Exercise {
     comment: Option<String>,
 }
 ```
+
+# Usage
+
+Use the command this way:
+```bash
+workout-note-parser -i - < input.txt > output.txt
+workout-note-parser -i input.txt > output.txt
+workout-note-parser -i input.txt -o output.txt
+```
+
+You can then use the output (in JSON format) to plot your progress, for example, with ChatGPT data analysis tool. Or just write a plotter yourself.
+
+# License
+
+MIT license

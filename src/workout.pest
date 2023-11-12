@@ -1,7 +1,7 @@
 workout = { SOI ~ (exercise | NEWLINE)+ ~ EOI }
 exercise = { name ~ (NEWLINE ~ set)+ }
 name = { (!NEWLINE ~ ANY)* }
-set = { weight ~ "x" ~ reps ~ ("+" ~ set)? ~ comment? }
+set = { weight ~ "x" ~ reps ~ ("+" ~ set)* ~ comment? }
 comment = { (!NEWLINE ~ ANY)+ }
 weight = {
     ASCII_DIGIT+ ~ "." ~ ASCII_DIGIT+

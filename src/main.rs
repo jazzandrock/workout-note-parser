@@ -1,14 +1,24 @@
 use serde_json;
-use std::io::{self, Read};
+use std::io::{self, Read, Write};
 use std::{fs::File, io::BufReader, path::PathBuf};
 use structopt::StructOpt;
 use workout_note_parser::*;
 
+/// Workout notes parser
+/// 
+/// Author: Oleg Syniakevych
+/// Version: 0.1.0
+/// 
+/// Parse workout notes into JSON format.
 #[derive(StructOpt, Debug)]
 struct Cli {
-    /// Input file, or '-' to read from stdin
-    #[structopt(parse(from_os_str))]
-    input: Option<PathBuf>,
+    /// Input file name or "-" for standard input
+    #[structopt(parse(from_os_str), short, long)]
+    input: PathBuf,
+
+    /// Output file name, "-" for standard output, default is standard output
+    #[structopt(parse(from_os_str), default_value = "-", short, long)]
+    output: PathBuf,
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -17,38 +27,25 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args = Cli::from_args();
 
     let mut buffer = String::new();
-    if let Some(input) = args.input.as_ref() {
-        if input.to_str() == Some("-") {
-            io::stdin().read_to_string(&mut buffer)?;
-        } else {
-            let file = File::open(input)?;
-            let mut reader = BufReader::new(file);
-            reader.read_to_string(&mut buffer)?;
-        }
+    if args.input.to_str() == Some("-") {
+        io::stdin().read_to_string(&mut buffer)?;
+    } else {
+        let file = File::open(args.input)?;
+        let mut reader = BufReader::new(file);
+        reader.read_to_string(&mut buffer)?;
     }
+    
+    let parsed = parse_workout(&buffer)?;
+    let serialized = serde_json::to_string(&parsed)?;
 
-    let input = r#"
-        Name of the first exercise
-        20 x 10 This is a comment. There you write 
-        30 x 10 how you felt during the exercise,
-        40 x 10 like "this was close to the edge"
-        50 x 10 or "this was easy, better increase the weight".
-        60 x 10 The first number is the weight, the second is the number of reps.
-        70 x 10 + 40 x 6 Sometimes you do all you can with one weight and then 
-        80 x 10 immediately you take a smaller weight and do a few more reps. 
-        90 x 10 You can write it as well
+    // Determine the output target
+    let mut output: Box<dyn Write> = if args.output.to_str() == Some("-") {
+        Box::new(io::stdout())
+    } else {
+        Box::new(File::create(args.output)?)
+    };
 
-        bench press
-        20 x 10
-        50 x 10
-        60 x 10 near death experience
-        70 x 5 + 40 x 10   
-    "#;
-
-    let vec = parse_workout(input)?;
-
-    let output = serde_json::to_string_pretty(&vec)?;
-    println!("{}", &output);
+    writeln!(output, "{}", &serialized)?;
 
     Ok(())
 }

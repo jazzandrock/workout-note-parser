@@ -201,4 +201,17 @@ mod tests {
 
         Ok(())
     }
+
+    #[test]
+    #[should_panic]
+    fn bad_workout() {
+        let input = r#"
+        vert block
+        35.5 x
+        35.5 x 10 + 40 x 8
+        35.5 x 10 + 40 x 8 this was really tough
+        "#;
+
+        WorkoutParser::parse(Rule::workout, input).unwrap();
+    }
 }
