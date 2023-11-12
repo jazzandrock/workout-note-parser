@@ -1,5 +1,7 @@
 # Workout note parser
 
+[![crate](https://img.shields.io/badge/crates.io-workout--note--parser-orange)](https://crates.io/crates/workout-note-parser)
+
 Ever wanted to parse your workout data from a file? Well, now you can! Take a look at this example workout note:
 
 ```
