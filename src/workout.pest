@@ -1,4 +1,4 @@
-workout = { (exercise | NEWLINE)+ }
+workout = { SOI ~ (exercise | NEWLINE)+ ~ EOI }
 exercise = { name ~ (NEWLINE ~ set)+ }
 name = { (!NEWLINE ~ ANY)* }
 set = { weight ~ "x" ~ reps ~ ("+" ~ set)? ~ comment? }

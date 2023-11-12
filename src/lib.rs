@@ -1,29 +1,33 @@
-use pest::iterators::Pair;
+use pest::{iterators::Pair, Parser};
+use serde::{Deserialize, Serialize};
 
 #[macro_use]
 extern crate pest_derive;
 
-mod error;
-pub use error::Error as ExerciseError;
+pub mod error;
+use error::Error;
 
 #[derive(Parser)]
 #[grammar = "workout.pest"]
 pub struct WorkoutParser;
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Set {
     weight: f32,
     n_reps: i32,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Exercise {
     name: String,
     sets: Vec<Set>,
     comment: Option<String>,
 }
 
-pub fn parse_set(name: String, pair: Pair<'_, Rule>) -> Result<Exercise, ExerciseError> {
+pub fn parse_set(name: String, pair: Pair<'_, Rule>) -> Result<Exercise, Error> {
+    if pair.as_rule() != Rule::set {
+        return Err(Error::ExpectedRule(Rule::set));
+    }
     let mut pairella = Some(pair);
 
     let mut sets = Vec::new();
@@ -38,24 +42,22 @@ pub fn parse_set(name: String, pair: Pair<'_, Rule>) -> Result<Exercise, Exercis
                 let mut pairs = pair.into_inner();
                 let weight = pairs
                     .next()
-                    .unwrap()
+                    .ok_or(Error::ExpectedRule(Rule::weight))?
                     .as_str()
                     .trim()
-                    .parse::<f32>()
-                    .unwrap();
+                    .parse::<f32>()?;
                 let n_reps = pairs
                     .next()
-                    .unwrap()
+                    .ok_or(Error::ExpectedRule(Rule::reps))?
                     .as_str()
                     .trim()
-                    .parse::<i32>()
-                    .unwrap();
+                    .parse::<i32>()?;
 
                 sets.push(Set { weight, n_reps });
 
                 pairella = pairs.next();
             }
-            _ => return Err(ExerciseError::UnexpectedRule(pair.as_rule())),
+            _ => return Err(Error::UnexpectedRule(pair.as_rule())),
         }
     }
 
@@ -66,36 +68,47 @@ pub fn parse_set(name: String, pair: Pair<'_, Rule>) -> Result<Exercise, Exercis
     })
 }
 
-pub fn get_exercise_from_pairs(pair: Pair<'_, Rule>) -> Result<Vec<Exercise>, ExerciseError> {
+pub fn get_exercise_from_pairs(pair: Pair<'_, Rule>) -> Result<Vec<Exercise>, Error> {
     if pair.as_rule() != Rule::exercise {
-        panic!("not Found exercise");
+        return Err(Error::ExpectedRule(Rule::exercise));
     }
 
     let mut rules = pair.into_inner();
-    let rule = rules.next().unwrap();
+    let rule = rules.next().ok_or(Error::ExpectedRule(Rule::name))?;
     if rule.as_rule() != Rule::name {
-        panic!("not Found name");
+        return Err(Error::ExpectedRule(Rule::name));
     }
+
     let name = rule.as_str().to_string();
-    println!("Name: {}", name);
 
-    let mut res = Vec::new();
-    while let Some(rule) = rules.next() {
-        if rule.as_rule() != Rule::set {
-            panic!("not Found sets");
-        }
-
-        res.push(parse_set(name.clone(), rule)?);
-    }
-
-    Ok(res)
+    rules
+        .filter(|r| r.as_rule() == Rule::set)
+        .map(|r| parse_set(name.clone(), r))
+        .collect()
 }
 
+pub fn parse_workout(input: &str) -> Result<Vec<Exercise>, Error> {
+    let mut parsed = WorkoutParser::parse(Rule::workout, input)?;
+
+    let workout = parsed.next().ok_or(Error::ExpectedRule(Rule::workout))?;
+    if workout.as_rule() != Rule::workout {
+        return Err(Error::ExpectedRule(Rule::workout));
+    }
+
+    let vec = workout
+        .into_inner()
+        .filter(|r| r.as_rule() == Rule::exercise)
+        .map(get_exercise_from_pairs)
+        .collect::<Result<Vec<_>, _>>()?;
+    let vec = vec.into_iter().flatten().collect::<Vec<_>>();
+
+    Ok(vec)
+}
 
 #[cfg(test)]
 mod tests {
-    use pest::Parser;
     use super::*;
+    use pest::Parser;
 
     #[test]
     fn weight() {

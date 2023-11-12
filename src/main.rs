@@ -1,10 +1,8 @@
-use pest::Parser;
-use sportparser::*;
-use structopt::StructOpt;
-use std::{path::PathBuf, fs::File, io::BufReader};
-
+use serde_json;
 use std::io::{self, Read};
-
+use std::{fs::File, io::BufReader, path::PathBuf};
+use structopt::StructOpt;
+use workout_note_parser::*;
 
 #[derive(StructOpt, Debug)]
 struct Cli {
@@ -30,13 +28,15 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     let input = r#"
-        name of the first exercise
-        20 x 10 this is a comment. there you write 
-        30 x 10 how you felt during the exercise
+        Name of the first exercise
+        20 x 10 This is a comment. There you write 
+        30 x 10 how you felt during the exercise,
         40 x 10 like "this was close to the edge"
-        50 x 10 or "this was easy, better increase the weight"
-        60 x 10 the first number is the weight, the second is the reps
-        70 x 10 + 40 x 6 sometimes you do all you can with one weight and then immediately you take a smaller weight and a few more reps. You can write it as well
+        50 x 10 or "this was easy, better increase the weight".
+        60 x 10 The first number is the weight, the second is the number of reps.
+        70 x 10 + 40 x 6 Sometimes you do all you can with one weight and then 
+        80 x 10 immediately you take a smaller weight and do a few more reps. 
+        90 x 10 You can write it as well
 
         bench press
         20 x 10
@@ -45,21 +45,10 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         70 x 5 + 40 x 10   
     "#;
 
-    let parsed = WorkoutParser::parse(Rule::workout, input)?;
+    let vec = parse_workout(input)?;
 
-
-    if let Some(workout) = parsed.into_iter().next() {
-        if workout.as_rule() != Rule::workout {
-            panic!("Expected workout");
-        }
-
-        let vec = workout
-            .into_inner()
-            .filter(|r| r.as_rule() == Rule::exercise)
-            .map(get_exercise_from_pairs)
-            .collect::<Result<Vec<_>, _>>()?;
-        println!("Vec: {:#?}", vec);
-    }
+    let output = serde_json::to_string_pretty(&vec)?;
+    println!("{}", &output);
 
     Ok(())
 }
