@@ -1,14 +1,13 @@
-use serde_json;
 use std::io::{self, Read, Write};
 use std::{fs::File, io::BufReader, path::PathBuf};
 use structopt::StructOpt;
 use workout_note_parser::*;
 
 /// Workout notes parser
-/// 
+///
 /// Author: Oleg Syniakevych
 /// Version: 0.1.0
-/// 
+///
 /// Parse workout notes into JSON format.
 #[derive(StructOpt, Debug)]
 struct Cli {
@@ -34,7 +33,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         let mut reader = BufReader::new(file);
         reader.read_to_string(&mut buffer)?;
     }
-    
+
     let parsed = parse_workout(&buffer)?;
     let serialized = serde_json::to_string(&parsed)?;
 

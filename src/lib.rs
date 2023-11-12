@@ -129,7 +129,7 @@ pub fn get_exercise_from_pairs(pair: Pair<'_, Rule>) -> Result<Vec<Exercise>, Er
 ///
 /// * `Result<Vec<Exercise>, Error>` - A `Result` that holds a vector of `Exercise`s if parsing was successful, or an `Error` if parsing failed.
 pub fn parse_workout(input: &str) -> Result<Vec<Exercise>, Error> {
-    let mut parsed = WorkoutParser::parse(Rule::workout, input)?;
+    let mut parsed = WorkoutParser::parse(Rule::workout, input).map_err(Box::new)?;
 
     let workout = parsed.next().ok_or(Error::ExpectedRule(Rule::workout))?;
     if workout.as_rule() != Rule::workout {
@@ -149,9 +149,8 @@ pub fn parse_workout(input: &str) -> Result<Vec<Exercise>, Error> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use pest::Parser;
     use anyhow::Result;
-
+    use pest::Parser;
 
     #[test]
     fn weight() -> Result<()> {

@@ -9,12 +9,12 @@ pub enum Error {
     #[error("Expected rule: {0:?}")]
     ExpectedRule(Rule),
 
-    #[error("parsing error: {0}")]
-    ParsingError(#[from] pest::error::Error<Rule>),
+    #[error(transparent)]
+    ParsingError(#[from] Box<pest::error::Error<Rule>>),
 
-    #[error("ParseIntError: {0}")]
+    #[error(transparent)]
     ParseIntError(#[from] std::num::ParseIntError),
 
-    #[error("ParseFloatError: {0}")]
+    #[error(transparent)]
     ParseFloatError(#[from] std::num::ParseFloatError),
 }
