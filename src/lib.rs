@@ -109,30 +109,35 @@ pub fn parse_workout(input: &str) -> Result<Vec<Exercise>, Error> {
 mod tests {
     use super::*;
     use pest::Parser;
+    use anyhow::Result;
+
 
     #[test]
-    fn weight() {
-        let parsed = WorkoutParser::parse(Rule::weight, "35        ");
-        assert!(parsed.unwrap().as_str() == "35");
+    fn weight() -> Result<()> {
+        let parsed = WorkoutParser::parse(Rule::weight, "35        ")?;
+        assert!(parsed.as_str() == "35");
+
+        Ok(())
     }
 
     #[test]
-    fn set() {
-        let parsed = WorkoutParser::parse(Rule::set, "35.5 x 10");
-        parsed.unwrap();
+    fn set() -> Result<()> {
+        WorkoutParser::parse(Rule::set, "35.5 x 10")?;
+
+        Ok(())
     }
 
     #[test]
-    fn extended_set() {
-        let parsed = WorkoutParser::parse(Rule::set, "35.5 x 10 + 40 x 8");
-        parsed.unwrap();
+    fn extended_set() -> Result<()> {
+        WorkoutParser::parse(Rule::set, "35.5 x 10 + 40 x 8")?;
 
-        let parsed = WorkoutParser::parse(Rule::set, "35.5 x 10 + 40 x 8 # this was really tough");
-        parsed.unwrap();
+        WorkoutParser::parse(Rule::set, "35.5 x 10 + 40 x 8 # this was really tough")?;
+
+        Ok(())
     }
 
     #[test]
-    fn workout() {
+    fn workout() -> Result<()> {
         let input = r#"
         vert block
         35.5 x 10
@@ -150,8 +155,9 @@ mod tests {
         35.5 x 10 + 40 x 8 this was really tough
         "#;
 
-        let parsed = WorkoutParser::parse(Rule::workout, input);
+        let parsed = WorkoutParser::parse(Rule::workout, input)?;
         println!("Parsed: {:#?}", parsed);
-        parsed.unwrap();
+
+        Ok(())
     }
 }
